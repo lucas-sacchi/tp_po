@@ -13,25 +13,32 @@ def ler_grafo(arquivo):
         arestas.append((u, v, c))  
     return n_vertices, n_arestas, arestas
 
-arquivo_grafo = "in.txt"
+arquivo_grafo = os.path.join(os.path.dirname(__file__), 'in.txt')
 n_vertices, n_arestas, arestas = ler_grafo(arquivo_grafo)
 mdl = Model(name="Fluxo_Custo_Minimo")
 fluxo = {(u, v): mdl.continuous_var(lb=0, name=f"x_{u}_{v}") for (u, v, c) in arestas}
-mdl.minimize(mdl.sum(fluxo[u, v] * c for (u, v, c) in arestas))
-fonte = 1
-destino = n_vertices
 
+# Função objetivo: Minimizar o custo total
+mdl.minimize(mdl.sum(fluxo[u, v] * c for (u, v, c) in arestas))
+
+# Nós de oferta, demanda e transbordo
+oferta = {1: 1, 2: 1, 3: 1}
+demanda = {4: -1, 7: -1, 8: -1, 9: -1}
+transbordo = {5: 0, 6: 0}
+
+# Restrições de conservação de fluxo
 for i in range(1, n_vertices + 1):
-    if i == fonte:
+    if i in oferta:
         mdl.add_constraint(mdl.sum(fluxo[u, v] for (u, v, c) in arestas if u == i) -
-                           mdl.sum(fluxo[v, u] for (v, u, c) in arestas if u == i) == 1)
-    elif i == destino:
+                           mdl.sum(fluxo[v, u] for (v, u, c) in arestas if u == i) == oferta[i])
+    elif i in demanda:
         mdl.add_constraint(mdl.sum(fluxo[u, v] for (u, v, c) in arestas if u == i) -
-                           mdl.sum(fluxo[v, u] for (v, u, c) in arestas if u == i) == -1)
+                           mdl.sum(fluxo[v, u] for (v, u, c) in arestas if u == i) == demanda[i])
     else:
         mdl.add_constraint(mdl.sum(fluxo[u, v] for (u, v, c) in arestas if u == i) -
                            mdl.sum(fluxo[v, u] for (v, u, c) in arestas if u == i) == 0)
 
+# Restrições de capacidade
 for (u, v, c) in arestas:
     mdl.add_constraint(fluxo[u, v] <= c)
 
@@ -64,4 +71,4 @@ if solucao:
     print(f"Memory usage before end: {mem_after:.6f} MB")
 
 else:
-    print("Nenhuma solução encontrada.")
+    print("Nenhuma solucao encontrada.")

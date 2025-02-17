@@ -12,10 +12,11 @@ def ler_grafo(arquivo):
     for linha in linhas[1:]:
         u, v, c = map(int, linha.strip().split())
         arestas.append((u, v, c))  # (origem, destino, custo)
+        arestas.append((v, u, c))
 
     return n_vertices, n_arestas, arestas
 
-arquivo_grafo = "in.txt"
+arquivo_grafo = os.path.join(os.path.dirname(__file__), 'in.txt')
 n_vertices, n_arestas, arestas = ler_grafo(arquivo_grafo)
 mdl = Model(name="Caminho_Minimo")
 x = {(u, v): mdl.binary_var(name=f"x_{u}_{v}") for (u, v, c) in arestas}
@@ -39,9 +40,9 @@ print(f"#Var: {len(x)}")
 print(f"#Restricoes: {sum(1 for _ in mdl.iter_constraints())}")
 print(f"Memory usage after variable creation: {mem_before:.6f} MB")
 
-mdl.context.solver.log_output = True
 start_time = time.time()
-solucao = mdl.solve()
+mdl.context.cplex_parameters.mip.tolerances.mipgap = 0.01
+solucao = mdl.solve(log_output=True, agent='local')
 end_time = time.time()
 mem_after = process.memory_info().rss / (1024.0 * 1024.0)
 

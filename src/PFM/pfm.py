@@ -16,7 +16,7 @@ def ler_grafo(arquivo):
 
     return n_vertices, n_arestas, arestas
 
-arquivo_grafo = "in.txt"
+arquivo_grafo = os.path.join(os.path.dirname(__file__), 'in.txt')
 n_vertices, n_arestas, arestas = ler_grafo(arquivo_grafo)
 mdl = Model(name="Fluxo_Maximo")
 fluxo = {(u, v): mdl.continuous_var(lb=0, ub=c, name=f"x_{u}_{v}") for (u, v, c) in arestas}

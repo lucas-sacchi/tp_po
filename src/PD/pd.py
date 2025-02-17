@@ -7,13 +7,16 @@ import pandas as pd
 def ler_dados_designacao(arquivo):
     with open(arquivo, 'r') as f:
         linhas = f.readlines()
-    n = int(linhas[0].strip())
+    n, m = map(int, linhas[0].strip().split())
+    if n != m:
+        raise ValueError("A matriz de custos deve ser quadrada para o problema de designação.")
     custos = []
-    for linha in linhas[1:n+1]:
+    # Lê as próximas n linhas
+    for linha in linhas[1:1+n]:
         custos.append(list(map(int, linha.strip().split())))
     return n, custos
 
-arquivo_designacao = "in.txt"
+arquivo_designacao = os.path.join(os.path.dirname(__file__), 'in.txt')
 n, custos = ler_dados_designacao(arquivo_designacao)
 mdl = Model(name="Problema_Designacao")
 x = {(i, j): mdl.binary_var(name=f"x_{i}_{j}") for i in range(n) for j in range(n)}

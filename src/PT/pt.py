@@ -15,7 +15,7 @@ def ler_dados_transporte(arquivo):
         custos.append(list(map(int, linha.strip().split())))
     return S, D, oferta, demanda, custos
 
-arquivo_transporte = "in.txt"
+arquivo_transporte = os.path.join(os.path.dirname(__file__), 'in.txt')
 S, D, oferta, demanda, custos = ler_dados_transporte(arquivo_transporte)
 mdl = Model(name="Problema_Transporte")
 x = {(i, j): mdl.continuous_var(lb=0, name=f"x_{i}_{j}") for i in range(S) for j in range(D)}
