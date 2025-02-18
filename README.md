@@ -85,6 +85,8 @@ pip install docplex pandas psutil
 ## 3. Como Executar
 Cada script pode ser executado diretamente pelo terminal da seguinte forma:
 ```bash
+python main.py
+ou
 python nome_do_arquivo.py
 ```
 **Exemplo:**
