@@ -9,38 +9,42 @@ def ler_grafo(arquivo):
     n_vertices, n_arestas = map(int, linhas[0].strip().split())
     arestas = []
     for linha in linhas[1:]:
-        u, v, c = map(int, linha.strip().split())
-        arestas.append((u, v, c))  
+        u, v, c, l = map(int, linha.strip().split())
+        arestas.append((u, v, c, l))  
     return n_vertices, n_arestas, arestas
 
 arquivo_grafo = os.path.join(os.path.dirname(__file__), 'in.txt')
 n_vertices, n_arestas, arestas = ler_grafo(arquivo_grafo)
 mdl = Model(name="Fluxo_Custo_Minimo")
-fluxo = {(u, v): mdl.continuous_var(lb=0, name=f"x_{u}_{v}") for (u, v, c) in arestas}
+fluxo = {(u, v): mdl.continuous_var(lb=0, name=f"x_{u}_{v}") for (u, v, c, l) in arestas}
 
 # Função objetivo: Minimizar o custo total
-mdl.minimize(mdl.sum(fluxo[u, v] * c for (u, v, c) in arestas))
+mdl.minimize(mdl.sum(fluxo[u, v] * c for (u, v, c, l) in arestas))
 
 # Nós de oferta, demanda e transbordo
-oferta = {1: 1, 2: 1, 3: 1}
-demanda = {4: -1, 7: -1, 8: -1, 9: -1}
+oferta = {1: 10, 2: 10, 3: 10}
+demanda = {4: -8, 7: -7, 8: -6, 9: -9}
 transbordo = {5: 0, 6: 0}
 
-# Restrições de conservação de fluxo
-for i in range(1, n_vertices + 1):
-    if i in oferta:
-        mdl.add_constraint(mdl.sum(fluxo[u, v] for (u, v, c) in arestas if u == i) -
-                           mdl.sum(fluxo[v, u] for (v, u, c) in arestas if u == i) == oferta[i])
-    elif i in demanda:
-        mdl.add_constraint(mdl.sum(fluxo[u, v] for (u, v, c) in arestas if u == i) -
-                           mdl.sum(fluxo[v, u] for (v, u, c) in arestas if u == i) == demanda[i])
-    else:
-        mdl.add_constraint(mdl.sum(fluxo[u, v] for (u, v, c) in arestas if u == i) -
-                           mdl.sum(fluxo[v, u] for (v, u, c) in arestas if u == i) == 0)
+# Restrições de oferta
+todos_os_nos = set(range(1, n_vertices + 1))
+for i in oferta:
+    mdl.add_constraint(mdl.sum(fluxo[u, v] for (u, v, c, l) in arestas if u == i) -
+                       mdl.sum(fluxo[v, u] for (v, u, c, l) in arestas if u == i) <= oferta[i])
+
+# Restrições de demanda
+for i in demanda:
+    mdl.add_constraint(mdl.sum(fluxo[u, v] for (u, v, c, l) in arestas if u == i) -
+                       mdl.sum(fluxo[v, u] for (v, u, c, l) in arestas if u == i) <= demanda[i])
+
+# Restrições de transbordo
+for i in transbordo:
+    mdl.add_constraint(mdl.sum(fluxo[u, v] for (u, v, c, l) in arestas if u == i) -
+                       mdl.sum(fluxo[v, u] for (v, u, c, l) in arestas if u == i) == 0)
 
 # Restrições de capacidade
-for (u, v, c) in arestas:
-    mdl.add_constraint(fluxo[u, v] <= c)
+for (u, v, c, l) in arestas:
+    mdl.add_constraint(fluxo[u, v] <= l)
 
 process = psutil.Process(os.getpid())
 mem_before = process.memory_info().rss / (1024.0 * 1024.0)
@@ -69,6 +73,5 @@ if solucao:
     print(f"\nFuncao Objetivo Valor = {mdl.objective_value:.0f}")
     print(f"..({end_time - start_time:.6f} seconds).\n")
     print(f"Memory usage before end: {mem_after:.6f} MB")
-
 else:
     print("Nenhuma solucao encontrada.")
